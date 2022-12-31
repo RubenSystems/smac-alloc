@@ -23,8 +23,9 @@ enum anyblock_delete_codes {
 	DELETE_SUCCESS
 };
 
+// I present to you: Why c++ can sometimes be easier:
 #define TYPED_BLOCK(name, type, max_count)\
-struct name {\
+struct name##_block {\
 	uint8_t used_size;\
 	uint8_t capacity; \
 	int64_t next;\
@@ -32,12 +33,12 @@ struct name {\
 	type data[max_count];\
 };\
 \
-struct name init_##name(void);\
-enum anyblock_insert_codes insert_into_##name(struct name * block, type value);\
-enum anyblock_delete_codes delete_from##name(struct name * block, type value);\
+struct name##_block init_##name##_block(void);\
+enum anyblock_insert_codes insert_into_##name##_block(struct name##_block * block, type value);\
+enum anyblock_delete_codes delete_from_##name##_block(struct name##_block * block, type value);\
 \
-struct name init_##name() {\
-	struct name _init_val = {\
+struct name##_block init_##name##_block() {\
+	struct name##_block _init_val = {\
 		.used_size = 0,\
 		.capacity = max_count,\
 		.next = -1,\
@@ -45,7 +46,7 @@ struct name init_##name() {\
 	};\
 	return _init_val;\
 }\
-enum anyblock_insert_codes insert_into_##name(struct name * block, type value) {\
+enum anyblock_insert_codes insert_into_##name##_block(struct name##_block * block, type value) {\
 	if (block->capacity == block->used_size + 1 && block->next == -1) {\
 		return INSERT_NEW_BLOCK;\
 	} else if (block->capacity == block->used_size + 1) {\
@@ -54,7 +55,7 @@ enum anyblock_insert_codes insert_into_##name(struct name * block, type value) {
 	block->data[block->used_size++] = value;\
 	return INSERT_SUCCESS;\
 }\
-enum anyblock_delete_codes delete_from##name(struct name * block, type value) {\
+enum anyblock_delete_codes delete_from_##name##_block(struct name##_block * block, type value) {\
 	for (uint8_t block_index = 0; block_index < block->used_size; block_index ++) {\
 		if (required_equal(block->data[block_index], value)) {\
 			memmove(\
@@ -67,14 +68,6 @@ enum anyblock_delete_codes delete_from##name(struct name * block, type value) {\
 	}\
 	return DELETE_NOT_FOUND;\
 }\
-
-static bool required_equal(int a, int b){
-	return a == b;
-}
-
-TYPED_BLOCK(ruben, int, DEFAULT_BLOCK_SIZE);
-
-
 
 
 #endif /* block_h */

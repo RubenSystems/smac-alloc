@@ -7,12 +7,10 @@
 
 #include <stdio.h>
 #include "src/include/block.h"
-#include "src/include/tower.h"
+#include "src/include/allocator.h"
 
 int main(int argc, const char * argv[]) {
-	// insert code here...
-	struct ruben a = init_ruben();
-	
+	// insert code here...	
 	
 
 	
