@@ -53,7 +53,7 @@ static enum file_responses _resize_file(int fd, size_t size) {
 static void * _palloc(int fd, size_t size, void * old_ptr, size_t old_ptr_size) {
 	void * new_ptr = mmap(NULL, size, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
 	_resize_file(fd, size);
-	if (old_ptr != NULL) {
+	if (old_ptr != NULL && old_ptr_size != 0) {
 		// Will truncate if old is larger then new
 		memmove(new_ptr, old_ptr, max(old_ptr_size, size));
 		munmap(old_ptr, old_ptr_size);
@@ -133,7 +133,6 @@ void name##_allocator_free(struct name##_allocator * allocator) {\
 
 
 /*
- Add item to block
  Remove item from block
  Return all items in block
  
