@@ -21,7 +21,6 @@
 struct allocator_metadata {
 	int 	fd;
 	size_t 	used_size;
-	size_t 	multiplier;
 };
 
 
@@ -34,12 +33,13 @@ struct name##_allocator {\
 	struct name##_block *		blocks;\
 };\
 \
-struct name##_allocator init_##name##_allocator(const char * file_name, const size_t multiplier);\
-void name##_allocator_alloc(struct name##_allocator * allocator, uint8_t number_of_blocks);\
-void name##_allocator_free(struct name##_allocator * allocator);\
-void name##_allocator_add(struct name##_allocator * allocator, uint8_t block_no, type value);\
+struct 	name##_allocator init_##name##_allocator(const char * file_name);\
+size_t 	name##_allocator_alloc(struct name##_allocator * allocator, uint8_t number_of_blocks);\
+void 	name##_allocator_free(struct name##_allocator * allocator);\
+size_t 	name##_allocator_get(struct name##_allocator * allocator, size_t block_no, size_t buffer_size, type * buffer);\
+void 	name##_allocator_add(struct name##_allocator * allocator, size_t block_no, type * value);\
 \
-struct name##_allocator init_##name##_allocator(const char * file_name, const size_t multiplier) {\
+struct name##_allocator init_##name##_allocator(const char * file_name) {\
 	int fd = _open_file(file_name);\
 	\
 	size_t file_size;\
@@ -52,25 +52,52 @@ struct name##_allocator init_##name##_allocator(const char * file_name, const si
 		{\
 			.fd = fd,\
 			.used_size = file_size / sizeof(struct name##_block),\
-			.multiplier = multiplier\
 		},\
 		_palloc(fd, file_size, NULL, 0)\
 	};\
 	return _init_val;\
 }\
-void name##_allocator_alloc(struct name##_allocator * allocator, uint8_t number_of_blocks) {\
+size_t name##_allocator_alloc(struct name##_allocator * allocator, uint8_t number_of_blocks) {\
 	allocator->blocks = _palloc(\
 		allocator->metadata.fd,\
 		(allocator->metadata.used_size + number_of_blocks) * sizeof(struct name##_block),\
 		allocator->blocks,\
 		allocator->metadata.used_size * sizeof(struct name##_block)\
 	);\
+	for (size_t block_idx = allocator->metadata.used_size; block_idx < allocator->metadata.used_size + number_of_blocks; block_idx ++) {\
+		allocator->blocks[block_idx] = init_##name##_block();\
+	}\
+	size_t old_size = allocator->metadata.used_size;\
+	allocator->metadata.used_size += number_of_blocks;\
+	return old_size;\
 }\
-void name##_allocator_add(struct name##_allocator * allocator, uint8_t block_no, type value) {\
-	insert_into_##name##_block(&allocator->blocks[block_no], value);\
+void name##_allocator_add(struct name##_allocator * alloc, size_t block_no, type * value) {\
+	switch(insert_into_##name##_block(&alloc->blocks[block_no], *value)) {\
+		case INSERT_NEW_BLOCK:\
+			{\
+				size_t new_block_index = name##_allocator_alloc(alloc, 1);\
+				alloc->blocks[block_no].next = new_block_index;\
+				alloc->blocks[new_block_index].previous = block_no;\
+				name##_allocator_add(alloc, new_block_index, value);\
+			}\
+			break;\
+		case INSERT_GOTO_NEXT:\
+			name##_allocator_add(alloc, alloc->blocks[block_no].next, value);\
+			break;\
+		case INSERT_SUCCESS:\
+			break;\
+	}\
 }\
-void name##_allocator_get(struct name##_allocator * allocator, uint8_t block_no, type * buffer) {\
-	memmove(buffer, &(allocator->blocks[block_no].data), allocator->blocks[block_no].used_size * sizeof(type));\
+size_t name##_allocator_get(struct name##_allocator * allocator, size_t block_no, size_t buffer_size, type * buffer) {\
+	size_t moved_count = 0;\
+	struct name##_block block;\
+	do {\
+		block = allocator->blocks[block_no];\
+		block_no = block.next;\
+		memmove(&buffer[moved_count], &block.data, block.used_size * sizeof(type));\
+		moved_count += block.used_size;\
+	} while (block.next != -1);\
+	return moved_count;\
 }\
 void name##_allocator_free(struct name##_allocator * allocator) {\
 	munmap(allocator->blocks, allocator->metadata.used_size * sizeof(struct name##_block));\
@@ -81,13 +108,5 @@ void name##_allocator_free(struct name##_allocator * allocator) {\
 /*
  Remove item from block 
  */
-
-static bool required_equal(int rhs, int lhs) {
-	return rhs == lhs;
-}
-
-TYPED_ALLOCATOR(ruben, int, DEFAULT_BLOCK_SIZE);
-
-
 
 #endif /* allocator_h */
