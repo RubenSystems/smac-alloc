@@ -9,61 +9,7 @@
 #define allocator_h
 
 #include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <stdlib.h>
-
-/*
-	Static helpers
-*/
-
-#define max(a, b) (a > b) ? a : b
-#define min(a, b) (a < b) ? a : b
-
-// Returns file descriptor of the file that was opened
-enum file_responses {
-	FILE_DOES_NOT_EXIST = -1,
-	FILE_UNABLE_TO_RESIZE = -2,
-	FILE_SUCCESS = 0
-};
-
-static int _open_file(const char * name) {
-	return open(name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-}
-
-static size_t _file_size(int fd) {
-	struct stat file_info;
-	if (fstat(fd, &file_info) == -1 || file_info.st_size == 0) {
-		return FILE_DOES_NOT_EXIST;
-	}
-	return file_info.st_size;
-}
-
-static enum file_responses _resize_file(int fd, size_t size) {
-	if (ftruncate(fd, size) == -1) {
-		return FILE_UNABLE_TO_RESIZE;
-	}
-	return FILE_SUCCESS;
-}
-
-/*
-	Requires file is appropiatly sized. See above function.
-*/
-static void * _palloc(int fd, size_t size, void * old_ptr, size_t old_ptr_size) {
-	void * new_ptr = mmap(NULL, size, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
-	_resize_file(fd, size);
-	if (old_ptr != NULL && old_ptr_size != 0) {
-		// Will truncate if old is larger then new
-		memmove(new_ptr, old_ptr, max(old_ptr_size, size));
-		munmap(old_ptr, old_ptr_size);
-	}
-	return new_ptr;
-}
-
-static inline ssize_t calculate_capacity_from_used_size(size_t used_size, size_t multiplier){
-	return used_size + (multiplier - (used_size % multiplier));
-}
+#include "palloc.h"
 
 /*
 	Response Types
@@ -133,9 +79,7 @@ void name##_allocator_free(struct name##_allocator * allocator) {\
 
 
 /*
- Remove item from block
- Return all items in block
- 
+ Remove item from block 
  */
 
 static bool required_equal(int rhs, int lhs) {
