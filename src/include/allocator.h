@@ -102,7 +102,14 @@ size_t name##_allocator_get(struct name##_allocator * allocator, size_t block_no
 void name##_allocator_free(struct name##_allocator * allocator) {\
 	munmap(allocator->blocks, allocator->metadata.used_size * sizeof(struct name##_block));\
 }\
-
+void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, type * value) {\
+	struct name##_block * block;\
+	do {\
+		block = &alloc->blocks[block_no];\
+		block_no = block->next;\
+		delete_from_##name##_block(block, *value);\
+	} while (block->next != -1);\
+}\
 
 
 /*

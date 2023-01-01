@@ -47,7 +47,6 @@ struct name##_block init_##name##_block() {\
 	return _init_val;\
 }\
 enum anyblock_insert_codes insert_into_##name##_block(struct name##_block * block, type value) {\
-	printf("%i %i %i \n", block->capacity, block->used_size, block->next);\
 	if (block->capacity <= block->used_size && block->next == -1) {\
 		return INSERT_NEW_BLOCK;\
 	} else if (block->capacity <= block->used_size) {\
@@ -62,7 +61,7 @@ enum anyblock_delete_codes delete_from_##name##_block(struct name##_block * bloc
 			memmove(\
 				&block->data[block_index],\
 				&block->data[block_index + 1],\
-				sizeof(type) * ((block->used_size--) - block_index)\
+				sizeof(type) * ((block->used_size--) - (block_index + 1))\
 			);\
 			return DELETE_SUCCESS;\
 		}\

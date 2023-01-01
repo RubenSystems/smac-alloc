@@ -26,8 +26,11 @@ int main(int argc, const char * argv[]) {
 	
 	//	Ruben allocator has 3 blocks
 	ruben_allocator_alloc(&x, 1);
-	int value = 22;
-	ruben_allocator_add(&x, 0, &value);
+	for (int value = 0; value < 10; value ++) {
+		ruben_allocator_add(&x, 0, &value);
+	}
+	int value = 0;
+	ruben_allocator_delete(&x, 0, &value);
 	
 	int buffer[1000];
 	uint8_t count = ruben_allocator_get(&x, 0, 1000, (int *)&buffer);
