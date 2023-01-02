@@ -38,6 +38,7 @@ size_t 	name##_allocator_alloc(struct name##_allocator * allocator, uint8_t numb
 void 	name##_allocator_free(struct name##_allocator * allocator);\
 size_t 	name##_allocator_get(struct name##_allocator * allocator, size_t block_no, size_t buffer_size, type * buffer);\
 void 	name##_allocator_add(struct name##_allocator * allocator, size_t block_no, type * value);\
+void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_to);\
 \
 struct name##_allocator init_##name##_allocator(const char * file_name) {\
 	int fd = _open_file(file_name);\
@@ -58,6 +59,7 @@ struct name##_allocator init_##name##_allocator(const char * file_name) {\
 	return _init_val;\
 }\
 size_t name##_allocator_alloc(struct name##_allocator * allocator, uint8_t number_of_blocks) {\
+	_resize_file(allocator->metadata.fd, (allocator->metadata.used_size + number_of_blocks) * sizeof(struct name##_block));\
 	allocator->blocks = _palloc(\
 		allocator->metadata.fd,\
 		(allocator->metadata.used_size + number_of_blocks) * sizeof(struct name##_block),\
@@ -82,8 +84,7 @@ void name##_allocator_add(struct name##_allocator * alloc, size_t block_no, type
 			}\
 			break;\
 		case INSERT_GOTO_NEXT:\
-			name##_allocator_add(alloc, alloc->blocks[block_no].next, value);\
-			break;\
+			return name##_allocator_add(alloc, alloc->blocks[block_no].next, value);\
 		case INSERT_SUCCESS:\
 			break;\
 	}\
@@ -93,10 +94,11 @@ size_t name##_allocator_get(struct name##_allocator * allocator, size_t block_no
 	struct name##_block block;\
 	do {\
 		block = allocator->blocks[block_no];\
+		printf("%i %i\n", block_no, block.used_size);\
 		block_no = block.next;\
 		memmove(&buffer[moved_count], &block.data, block.used_size * sizeof(type));\
 		moved_count += block.used_size;\
-	} while (block.next != -1);\
+	} while (block_no != -1);\
 	return moved_count;\
 }\
 void name##_allocator_free(struct name##_allocator * allocator) {\
@@ -104,13 +106,63 @@ void name##_allocator_free(struct name##_allocator * allocator) {\
 }\
 void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, type * value) {\
 	struct name##_block * block;\
-	do {\
+	while (1) {\
+		if (block_no == -1) {\
+			break;\
+		}\
 		block = &alloc->blocks[block_no];\
-		block_no = block->next;\
 		delete_from_##name##_block(block, *value);\
-	} while (block->next != -1);\
+		if (block->previous != -1 && block->used_size == 0) {\
+			struct name##_block * temp_previous_block = &alloc->blocks[block->previous];\
+			printf("CLR CELL, NEXT: %i \n", temp_previous_block->next);\
+			__##name##_shift_last_block(alloc, block_no);\
+			printf("CLR CELL, NEXT: %i \n", block->previous);\
+			block_no = temp_previous_block->next;\
+		} else {\
+			block_no = block->next;\
+		}\
+	}\
+}\
+void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_to) {\
+	struct name##_block * from = &alloc->blocks[alloc->metadata.used_size - 1];\
+	struct name##_block * to = &alloc->blocks[block_to];\
+	if (to->previous != -1) {\
+		alloc->blocks[to->previous].next = to->next;\
+	}\
+	if (to->next != -1) {\
+		alloc->blocks[to->next].previous = to->previous;\
+	}\
+	if (from->previous != -1) {\
+		alloc->blocks[from->previous].next = block_to;\
+	}\
+	if (from->next != -1) {\
+		alloc->blocks[from->next].previous = block_to;\
+	}\
+	memmove(to, from, sizeof(struct name##_block));\
+	_resize_file(alloc->metadata.fd, sizeof(struct name##_block) * (alloc->metadata.used_size - 1));\
+	alloc->blocks = _palloc(\
+		alloc->metadata.fd,\
+		sizeof(struct name##_block) * (alloc->metadata.used_size - 1),\
+		alloc->blocks,\
+		sizeof(struct name##_block) * (alloc->metadata.used_size)\
+	);\
+	alloc->metadata.used_size--;\
+printf("HRE");\
 }\
 
+/*
+void __##name##_free_block(struct name##_allocator * alloc, struct name##_block * current_block) {\
+	if (current_block->previous != -1) {\
+		alloc->blocks[current_block->previous].next = current_block->next;\
+	}\
+	if (current_block->next != -1) {\
+		alloc->blocks[current_block->next].previous = current_block->previous;\
+	}\
+	__##name##_shift_last_block(alloc, current_block);\
+}\
+
+void __##name##_update_references(struct name##_allocator * alloc, )
+*/
 
 /*
  Remove item from block 

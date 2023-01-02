@@ -28,6 +28,7 @@ size_t _file_size(int fd) {
 
 enum file_responses _resize_file(int fd, size_t size) {
 	if (ftruncate(fd, size) == -1) {
+		printf("[FAIL]");
 		return FILE_UNABLE_TO_RESIZE;
 	}
 	return FILE_SUCCESS;
@@ -41,7 +42,7 @@ void * _palloc(int fd, size_t size, void * old_ptr, size_t old_ptr_size) {
 	_resize_file(fd, size);
 	if (old_ptr != NULL && old_ptr_size != 0) {
 		// Will truncate if old is larger then new
-		memmove(new_ptr, old_ptr, max(old_ptr_size, size));
+		memmove(new_ptr, old_ptr, min(old_ptr_size, size));
 		munmap(old_ptr, old_ptr_size);
 	}
 	return new_ptr;
