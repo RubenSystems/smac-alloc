@@ -28,7 +28,7 @@ size_t _file_size(int fd) {
 
 enum file_responses _resize_file(int fd, size_t size) {
 	if (ftruncate(fd, size) == -1) {
-		printf("[FAIL]");
+		printf("[SMAC] - failed to resize_file");
 		return FILE_UNABLE_TO_RESIZE;
 	}
 	return FILE_SUCCESS;
@@ -38,7 +38,18 @@ enum file_responses _resize_file(int fd, size_t size) {
 	Requires file is appropiatly sized. See above function.
 */
 void * _palloc(int fd, size_t size, void * old_ptr, size_t old_ptr_size) {
+	if (size == 0) {
+		return NULL;
+	} else if (size == old_ptr_size) {
+		return old_ptr;
+	}
+//	else if (size < old_ptr_size) {
+////		munmap(old_ptr, old_ptr_size - size);
+//		return old_ptr;
+//	}
+	
 	void * new_ptr = mmap(NULL, size, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+	
 	_resize_file(fd, size);
 	if (old_ptr != NULL && old_ptr_size != 0) {
 		// Will truncate if old is larger then new

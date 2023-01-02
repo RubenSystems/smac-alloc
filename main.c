@@ -25,15 +25,18 @@ int main(int argc, const char * argv[]) {
 	
 	
 	//	Ruben allocator has 3 blocks
-	ruben_allocator_alloc(&x, 1);
-	for (int value = 0; value < 10; value ++) {
-		ruben_allocator_add(&x, 0, &value);
-	}
-	int value = 4;
-	ruben_allocator_delete(&x, 0, &value);
-	int value2 = 5;
-	ruben_allocator_delete(&x, 0, &value2);
-	printf("YSED%i\n", x.metadata.used_size);
+//	ruben_allocator_alloc(&x, 1);
+//	for (int value = 0; value < 10; value ++) {
+//		ruben_allocator_add(&x, 0, &value);
+//	}
+//	int val1 = 4;
+//	ruben_allocator_add(&x, 0, &val1);
+//
+//	int value = 5;
+//	ruben_allocator_delete(&x, 0, &value);
+//	int value2 = 4;
+//	ruben_allocator_delete(&x, 0, &value2);
+//	printf("YSED%i\n", x.metadata.used_size);
 	
 	int buffer[1000];
 	uint8_t count = ruben_allocator_get(&x, 0, 1000, (int *)&buffer);

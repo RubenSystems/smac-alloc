@@ -61,7 +61,7 @@ enum anyblock_delete_codes delete_from_##name##_block(struct name##_block * bloc
 			memmove(\
 				&block->data[block_index],\
 				&block->data[block_index + 1],\
-				sizeof(type) * ((block->used_size--) - (block_index + 1))\
+				sizeof(type) * (block->used_size-- - (block_index))\
 			);\
 			return DELETE_SUCCESS;\
 		}\

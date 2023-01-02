@@ -44,7 +44,7 @@ struct name##_allocator init_##name##_allocator(const char * file_name) {\
 	int fd = _open_file(file_name);\
 	\
 	size_t file_size;\
-	if ((file_size = _file_size(fd)) == FILE_DOES_NOT_EXIST && _resize_file(fd, file_size) == FILE_UNABLE_TO_RESIZE) {\
+	if ((file_size = _file_size(fd)) == FILE_DOES_NOT_EXIST) {\
 		printf("[SMAC] - creating file\n");\
 		file_size = 0;\
 	}\
@@ -59,7 +59,6 @@ struct name##_allocator init_##name##_allocator(const char * file_name) {\
 	return _init_val;\
 }\
 size_t name##_allocator_alloc(struct name##_allocator * allocator, uint8_t number_of_blocks) {\
-	_resize_file(allocator->metadata.fd, (allocator->metadata.used_size + number_of_blocks) * sizeof(struct name##_block));\
 	allocator->blocks = _palloc(\
 		allocator->metadata.fd,\
 		(allocator->metadata.used_size + number_of_blocks) * sizeof(struct name##_block),\
@@ -94,7 +93,6 @@ size_t name##_allocator_get(struct name##_allocator * allocator, size_t block_no
 	struct name##_block block;\
 	do {\
 		block = allocator->blocks[block_no];\
-		printf("%i %i\n", block_no, block.used_size);\
 		block_no = block.next;\
 		memmove(&buffer[moved_count], &block.data, block.used_size * sizeof(type));\
 		moved_count += block.used_size;\
@@ -113,11 +111,10 @@ void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, t
 		block = &alloc->blocks[block_no];\
 		delete_from_##name##_block(block, *value);\
 		if (block->previous != -1 && block->used_size == 0) {\
-			struct name##_block * temp_previous_block = &alloc->blocks[block->previous];\
-			printf("CLR CELL, NEXT: %i \n", temp_previous_block->next);\
+			size_t temp_previous_block = block->previous;\
+			printf("CLR CELL, NEXT: %i %i \n", temp_previous_block == block, alloc->metadata.used_size - 1);\
 			__##name##_shift_last_block(alloc, block_no);\
-			printf("CLR CELL, NEXT: %i \n", block->previous);\
-			block_no = temp_previous_block->next;\
+			block_no = alloc->blocks[temp_previous_block].next;\
 		} else {\
 			block_no = block->next;\
 		}\
@@ -139,7 +136,6 @@ void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_t
 		alloc->blocks[from->next].previous = block_to;\
 	}\
 	memmove(to, from, sizeof(struct name##_block));\
-	_resize_file(alloc->metadata.fd, sizeof(struct name##_block) * (alloc->metadata.used_size - 1));\
 	alloc->blocks = _palloc(\
 		alloc->metadata.fd,\
 		sizeof(struct name##_block) * (alloc->metadata.used_size - 1),\
@@ -147,7 +143,6 @@ void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_t
 		sizeof(struct name##_block) * (alloc->metadata.used_size)\
 	);\
 	alloc->metadata.used_size--;\
-printf("HRE");\
 }\
 
 /*
