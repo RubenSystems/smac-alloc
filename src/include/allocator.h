@@ -92,7 +92,6 @@ size_t name##_allocator_get(struct name##_allocator * allocator, size_t block_no
 	size_t moved_count = 0;\
 	struct name##_block block;\
 	do {\
-printf("GET: %i %i\n", block_no, allocator->blocks[block_no].next);\
 		block = allocator->blocks[block_no];\
 		block_no = block.next;\
 		memmove(&buffer[moved_count], &block.data, block.used_size * sizeof(type));\
@@ -113,7 +112,6 @@ void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, t
 		delete_from_##name##_block(block, *value);\
 		if (block->previous != -1 && block->used_size == 0) {\
 			size_t next_block = block->next;\
-			printf("NB: %i\n", next_block);\
 			__##name##_shift_last_block(alloc, block_no);\
 			block_no = next_block;\
 		} else {\
@@ -124,7 +122,6 @@ void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, t
 void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_to) {\
 	struct name##_block * from = &alloc->blocks[alloc->metadata.used_size - 1];\
 	struct name##_block * to = &alloc->blocks[block_to];\
-	printf("BLOCK: %i \n FROM: %i %i\nTO: %i %i %i\n",block_to, from->previous, from->next, to->previous, to->next, from == to);\
 	if (from->previous != -1) {\
 		alloc->blocks[from->previous].next = block_to;\
 	}\
@@ -147,22 +144,5 @@ void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_t
 	alloc->metadata.used_size--;\
 }\
 
-/*
-void __##name##_free_block(struct name##_allocator * alloc, struct name##_block * current_block) {\
-	if (current_block->previous != -1) {\
-		alloc->blocks[current_block->previous].next = current_block->next;\
-	}\
-	if (current_block->next != -1) {\
-		alloc->blocks[current_block->next].previous = current_block->previous;\
-	}\
-	__##name##_shift_last_block(alloc, current_block);\
-}\
-
-void __##name##_update_references(struct name##_allocator * alloc, )
-*/
-
-/*
- Remove item from block 
- */
 
 #endif /* allocator_h */

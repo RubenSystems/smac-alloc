@@ -41,7 +41,6 @@ int main(int argc, const char * argv[]) {
 	ruben_allocator_delete(&x, 0, &value);
 //	int value2 = 6;
 //	ruben_allocator_delete(&x, 0, &value2);
-	printf("YSED%i\n", x.metadata.used_size);
 	
 	count = ruben_allocator_get(&x, 0, 1000, (int *)&buffer);
 	for (int i = 0; i < count; i ++){
