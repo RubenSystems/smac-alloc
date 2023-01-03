@@ -25,19 +25,19 @@ int main(int argc, const char * argv[]) {
 	
 	
 	//	Ruben allocator has 3 blocks
-	ruben_allocator_alloc(&x, 1);
-	for (int value = 0; value < 10; value ++) {
-		ruben_allocator_add(&x, 0, &value);
-	}
-	int val1 = 4;
-	ruben_allocator_add(&x, 0, &val1);
+//	ruben_allocator_alloc(&x, 1);
+//	for (int value = 0; value < 10; value ++) {
+//		ruben_allocator_add(&x, 0, &value);
+//	}
+//	int val1 = 4;
+//	ruben_allocator_add(&x, 0, &val1);
 	int buffer[1000];
 	uint8_t count = ruben_allocator_get(&x, 0, 1000, (int *)&buffer);
 	for (int i = 0; i < count; i ++){
 		printf("hi%i\n", buffer[i]);
 	}
 
-	int value = 4;
+	int value = 7;
 	ruben_allocator_delete(&x, 0, &value);
 //	int value2 = 6;
 //	ruben_allocator_delete(&x, 0, &value2);
