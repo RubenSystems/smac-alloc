@@ -139,9 +139,8 @@ void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_t
 		alloc->metadata.fd,\
 		sizeof(struct name##_block) * (alloc->metadata.used_size - 1),\
 		alloc->blocks,\
-		sizeof(struct name##_block) * (alloc->metadata.used_size)\
+		sizeof(struct name##_block) * (alloc->metadata.used_size--)\
 	);\
-	alloc->metadata.used_size--;\
 }\
 
 
