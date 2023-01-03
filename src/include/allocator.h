@@ -92,6 +92,7 @@ size_t name##_allocator_get(struct name##_allocator * allocator, size_t block_no
 	size_t moved_count = 0;\
 	struct name##_block block;\
 	do {\
+printf("GET: %i\n", block_no);\
 		block = allocator->blocks[block_no];\
 		block_no = block.next;\
 		memmove(&buffer[moved_count], &block.data, block.used_size * sizeof(type));\
@@ -111,10 +112,10 @@ void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, t
 		block = &alloc->blocks[block_no];\
 		delete_from_##name##_block(block, *value);\
 		if (block->previous != -1 && block->used_size == 0) {\
-			size_t temp_previous_block = block->previous;\
-			printf("CLR CELL, NEXT: %i %i \n", temp_previous_block == block, alloc->metadata.used_size - 1);\
+			size_t next_block = block->next;\
+			printf("NB: %i\n", next_block);\
 			__##name##_shift_last_block(alloc, block_no);\
-			block_no = alloc->blocks[temp_previous_block].next;\
+			block_no = next_block;\
 		} else {\
 			block_no = block->next;\
 		}\
@@ -123,19 +124,24 @@ void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, t
 void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_to) {\
 	struct name##_block * from = &alloc->blocks[alloc->metadata.used_size - 1];\
 	struct name##_block * to = &alloc->blocks[block_to];\
-	if (to->previous != -1) {\
-		alloc->blocks[to->previous].next = to->next;\
+	printf("FROM: %i %i\nTO: %i %i %i\n", from->previous, from->next, to->previous, to->next, from == to);\
+	if (from != to) {\
+		if (to->previous != -1) {\
+			alloc->blocks[to->previous].next = to->next;\
+		}\
+		if (to->next != -1) {\
+			alloc->blocks[to->next].previous = to->previous;\
+		}\
+		if (from->previous != -1) {\
+			alloc->blocks[from->previous].next = block_to;\
+		}\
+		if (from->next != -1) {\
+			alloc->blocks[from->next].previous = block_to;\
+		}\
+		*to = *from;\
+	} else {\
+		alloc->blocks[to->previous].next = -1;\
 	}\
-	if (to->next != -1) {\
-		alloc->blocks[to->next].previous = to->previous;\
-	}\
-	if (from->previous != -1) {\
-		alloc->blocks[from->previous].next = block_to;\
-	}\
-	if (from->next != -1) {\
-		alloc->blocks[from->next].previous = block_to;\
-	}\
-	memmove(to, from, sizeof(struct name##_block));\
 	alloc->blocks = _palloc(\
 		alloc->metadata.fd,\
 		sizeof(struct name##_block) * (alloc->metadata.used_size - 1),\

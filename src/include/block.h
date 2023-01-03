@@ -42,7 +42,7 @@ struct name##_block init_##name##_block() {\
 		.used_size = 0,\
 		.capacity = max_count,\
 		.next = -1,\
-		.previous = 1,\
+		.previous = -1,\
 	};\
 	return _init_val;\
 }\
@@ -56,17 +56,18 @@ enum anyblock_insert_codes insert_into_##name##_block(struct name##_block * bloc
 	return INSERT_SUCCESS;\
 }\
 enum anyblock_delete_codes delete_from_##name##_block(struct name##_block * block, type value) {\
-	for (uint8_t block_index = 0; block_index < block->used_size; block_index ++) {\
+	bool del_performed = false;\
+	for (int block_index = block->used_size - 1; block_index >= 0; block_index--) {\
 		if (required_equal(block->data[block_index], value)) {\
 			memmove(\
 				&block->data[block_index],\
 				&block->data[block_index + 1],\
-				sizeof(type) * (block->used_size-- - (block_index))\
+				sizeof(type) * ((block->used_size--) - (block_index))\
 			);\
-			return DELETE_SUCCESS;\
+			del_performed = true;\
 		}\
 	}\
-	return DELETE_NOT_FOUND;\
+	return del_performed ? DELETE_SUCCESS : DELETE_NOT_FOUND;\
 }\
 
 
