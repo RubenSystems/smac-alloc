@@ -38,16 +38,15 @@ enum file_responses _resize_file(int fd, size_t size) {
 	Requires file is appropiatly sized. See above function.
 */
 void * _palloc(int fd, size_t size, void * old_ptr, size_t old_ptr_size) {
-	if (size == 0) {
+	if (size == 0 && old_ptr_size > 0) {
+		munmap(old_ptr, old_ptr_size);
+		return NULL;
+	} else if (size == 0) {
 		return NULL;
 	} else if (size == old_ptr_size) {
 		return old_ptr;
 	}
-//	else if (size < old_ptr_size) {
-////		munmap(old_ptr, old_ptr_size - size);
-//		return old_ptr;
-//	}
-	
+
 	void * new_ptr = mmap(NULL, size, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
 	
 	_resize_file(fd, size);

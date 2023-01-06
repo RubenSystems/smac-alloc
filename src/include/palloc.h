@@ -25,6 +25,7 @@ int _open_file(const char * name);
 size_t _file_size(int fd);
 
 enum file_responses _resize_file(int fd, size_t size);
+
 /*
 	Requires file is appropiatly sized. See above
 */
