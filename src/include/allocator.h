@@ -27,8 +27,8 @@ struct allocator_metadata {
 
 
 
-#define TYPED_ALLOCATOR(name, type, max_count)\
-TYPED_BLOCK(name, type, max_count)\
+#define TYPED_ALLOCATOR_DEF(name, type, max_count)\
+TYPED_BLOCK_DEF(name, type, max_count)\
 \
 struct name##_allocator {\
 	struct allocator_metadata	metadata;\
@@ -37,25 +37,25 @@ struct name##_allocator {\
 };\
 \
 struct 	name##_allocator init_##name##_allocator(const char * file_name, void * pre_data, size_t pre_data_size);\
-size_t 	name##_allocator_alloc(struct name##_allocator * allocator, uint8_t number_of_blocks);\
+struct 	name##_allocator init_##name##_allocator_pre_open(int fd, void * pre_data, size_t pre_data_size);\
+size_t 	name##_allocator_alloc(struct name##_allocator * allocator, size_t number_of_blocks);\
 void 	name##_allocator_free(struct name##_allocator * allocator);\
 size_t 	name##_allocator_get(struct name##_allocator * allocator, size_t block_no, size_t buffer_size, type * buffer);\
 void 	name##_allocator_add(struct name##_allocator * allocator, size_t block_no, type * value);\
 void 	__##name##_shift_last_block(struct name##_allocator * alloc, size_t block_to);\
-\
+
+#define TYPED_ALLOCATOR_IMPL(name, type, max_count)\
+TYPED_BLOCK_IMPL(name, type, max_count)\
 static struct name##_block * __##name##_alloc_get_block_ptr(struct name##_allocator * allocator) {\
-	return (struct name##_block *)((uint8_t *)allocator->raw_data + allocator->pre_data_size);\
+	return (struct name##_block *)(allocator->raw_data + allocator->pre_data_size);\
 }\
 \
-struct name##_allocator init_##name##_allocator(const char * file_name, void * pre_data, size_t pre_data_size) {\
-	int fd = _open_file(file_name);\
-	\
+struct name##_allocator init_##name##_allocator_pre_open(int fd, void * pre_data, size_t pre_data_size) {\
 	size_t file_size;\
-	if ((file_size = _file_size(fd)) == FILE_DOES_NOT_EXIST) {\
+	if ((file_size = _file_size(fd)) == 0) {\
 		printf("[SMAC] - creating file\n");\
 		file_size = pre_data_size;\
 	}\
-printf("%i", (int)file_size);\
 	\
 	struct name##_allocator _init_val = {\
 		{\
@@ -65,10 +65,17 @@ printf("%i", (int)file_size);\
 		.pre_data_size = pre_data_size,\
 		.raw_data = _palloc(fd, file_size, NULL, 0)\
 	};\
-	memmove(_init_val.raw_data, pre_data, pre_data_size);\
+	if (pre_data != NULL) {\
+		memmove(_init_val.raw_data, pre_data, pre_data_size);\
+	}\
 	return _init_val;\
 }\
-size_t name##_allocator_alloc(struct name##_allocator * allocator, uint8_t number_of_blocks) {\
+\
+struct name##_allocator init_##name##_allocator(const char * file_name, void * pre_data, size_t pre_data_size) {\
+	int fd = _open_file(file_name);\
+	return init_##name##_allocator_pre_open(fd, pre_data, pre_data_size);\
+}\
+size_t name##_allocator_alloc(struct name##_allocator * allocator, size_t number_of_blocks) {\
 	allocator->raw_data = _palloc(\
 		allocator->metadata.fd,\
 		((allocator->metadata.used_size + number_of_blocks) * sizeof(struct name##_block)) + allocator->pre_data_size,\

@@ -21,7 +21,7 @@ int _open_file(const char * name) {
 size_t _file_size(int fd) {
 	struct stat file_info;
 	if (fstat(fd, &file_info) == -1 || file_info.st_size == 0) {
-		return FILE_DOES_NOT_EXIST;
+		return 0;
 	}
 	return file_info.st_size;
 }
@@ -40,8 +40,6 @@ enum file_responses _resize_file(int fd, size_t size) {
 void * _palloc(int fd, size_t size, void * old_ptr, size_t old_ptr_size) {
 	if (size == 0 && old_ptr_size > 0) {
 		munmap(old_ptr, old_ptr_size);
-		return NULL;
-	} else if (size == 0) {
 		return NULL;
 	} else if (size == old_ptr_size) {
 		return old_ptr;

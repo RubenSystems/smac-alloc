@@ -24,7 +24,7 @@ enum anyblock_delete_codes {
 };
 
 // I present to you: Why c++ can sometimes be easier:
-#define TYPED_BLOCK(name, type, max_count)\
+#define TYPED_BLOCK_DEF(name, type, max_count)\
 struct name##_block {\
 	uint8_t used_size;\
 	uint8_t capacity; \
@@ -36,7 +36,8 @@ struct name##_block {\
 struct name##_block init_##name##_block(void);\
 enum anyblock_insert_codes insert_into_##name##_block(struct name##_block * block, type value);\
 enum anyblock_delete_codes delete_from_##name##_block(struct name##_block * block, type value);\
-\
+
+#define TYPED_BLOCK_IMPL(name, type, max_count)\
 struct name##_block init_##name##_block() {\
 	struct name##_block _init_val = {\
 		.used_size = 0,\
@@ -58,7 +59,7 @@ enum anyblock_insert_codes insert_into_##name##_block(struct name##_block * bloc
 enum anyblock_delete_codes delete_from_##name##_block(struct name##_block * block, type value) {\
 	bool del_performed = false;\
 	for (int block_index = block->used_size - 1; block_index >= 0; block_index--) {\
-		if (required_equal(block->data[block_index], value)) {\
+	if (name##_required_equal(block->data[block_index], value)) {\
 			memmove(\
 				&block->data[block_index],\
 				&block->data[block_index + 1],\
