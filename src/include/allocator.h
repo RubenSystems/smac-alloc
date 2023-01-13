@@ -112,9 +112,13 @@ size_t name##_allocator_get(struct name##_allocator * allocator, size_t block_no
 	do {\
 		block = __##name##_alloc_get_block_ptr(allocator)[block_no];\
 		block_no = block.next;\
-		memmove(&buffer[moved_count], &block.data, block.used_size * sizeof(type));\
-		moved_count += block.used_size;\
-	} while (block_no != -1);\
+		memmove(&buffer[moved_count], &block.data,\
+			block.used_size < (buffer_size - moved_count) ?\
+			block.used_size * sizeof(type) :\
+			(buffer_size - moved_count) * sizeof(type)\
+		);\
+		moved_count += block.used_size < (buffer_size - moved_count) ? block.used_size :(buffer_size - moved_count);\
+	} while (block_no != -1 && moved_count < buffer_size);\
 	return moved_count;\
 }\
 void name##_allocator_free(struct name##_allocator * alloc) {\
