@@ -9,6 +9,7 @@
 #define allocator_h
 
 #include <sys/mman.h>
+#include <stdlib.h>
 #include "palloc.h"
 #include "block.h"
 
