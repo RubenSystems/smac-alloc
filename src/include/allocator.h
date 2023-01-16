@@ -131,6 +131,7 @@ void name##_allocator_free(struct name##_allocator * alloc) {\
 }\
 void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, type * value) {\
 	struct name##_block * block;\
+	size_t iterations = 0;\
 	while (1) {\
 		if (block_no == -1) {\
 			break;\
@@ -143,6 +144,10 @@ void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, t
 			block_no = next_block;\
 		} else {\
 			block_no = block->next;\
+		}\
+		if (++iterations >= alloc->metadata.used_size) {\
+			printf("[SMAC] - terminated due to undetected loop");\
+			return;\
 		}\
 	}\
 }\
