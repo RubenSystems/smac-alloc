@@ -50,7 +50,7 @@ struct name##_block init_##name##_block() {\
 enum anyblock_insert_codes insert_into_##name##_block(struct name##_block * block, type value) {\
 	if (block->capacity <= block->used_size - 1 && block->next == -1) {\
 		return INSERT_NEW_BLOCK;\
-	} else if (block->capacity <= block->used_size) {\
+	} else if (block->capacity <= block->used_size - 1) {\
 		return INSERT_GOTO_NEXT;\
 	}\
 	block->data[block->used_size++] = value;\
