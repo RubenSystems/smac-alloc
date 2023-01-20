@@ -132,22 +132,15 @@ void name##_allocator_free(struct name##_allocator * alloc) {\
 void name##_allocator_delete(struct name##_allocator * alloc, size_t block_no, type * value) {\
 	struct name##_block * block;\
 	size_t iterations = 0;\
-	while (1) {\
-		if (block_no == -1) {\
-			break;\
-		}\
+	while (block_no != -1) {\
 		block = &__##name##_alloc_get_block_ptr(alloc)[block_no];\
 		delete_from_##name##_block(block, *value);\
 		if (block->previous != -1 && block->used_size == 0) {\
-			size_t next_block = block->next;\
+			size_t prev_block = block->previous;\
 			__##name##_shift_last_block(alloc, block_no);\
-			block_no = next_block;\
+			block_no = __##name##_alloc_get_block_ptr(alloc)[prev_block].next ;\
 		} else {\
 			block_no = block->next;\
-		}\
-		if (++iterations >= alloc->metadata.used_size) {\
-			printf("[SMAC] - terminated due to undetected loop");\
-			return;\
 		}\
 	}\
 }\
@@ -156,6 +149,9 @@ void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_t
 	struct name##_block * to = &__##name##_alloc_get_block_ptr(alloc)[block_to];\
 	if (from->previous != -1) {\
 		__##name##_alloc_get_block_ptr(alloc)[from->previous].next = block_to;\
+	}\
+	if (from->previous == block_to) {\
+		from->previous = to->previous;\
 	}\
 	if (from->next != -1) {\
 		__##name##_alloc_get_block_ptr(alloc)[from->next].previous = block_to;\
