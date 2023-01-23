@@ -21,6 +21,11 @@
 	Functionality
  */
 
+
+
+
+
+/*
 struct allocator_metadata {
 	int 	fd;
 	size_t 	used_size;
@@ -44,10 +49,11 @@ void 	name##_allocator_free(struct name##_allocator * allocator);\
 size_t 	name##_allocator_get(struct name##_allocator * allocator, size_t block_no, size_t buffer_size, type * buffer);\
 void 	name##_allocator_add(struct name##_allocator * allocator, size_t block_no, type * value);\
 void 	__##name##_shift_last_block(struct name##_allocator * alloc, size_t block_to);\
+struct name##_block * __##name##_alloc_get_block_ptr(struct name##_allocator * allocator);\
 
 #define TYPED_ALLOCATOR_IMPL(name, type, max_count)\
 TYPED_BLOCK_IMPL(name, type, max_count)\
-static struct name##_block * __##name##_alloc_get_block_ptr(struct name##_allocator * allocator) {\
+struct name##_block * __##name##_alloc_get_block_ptr(struct name##_allocator * allocator) {\
 	return (struct name##_block *)(allocator->raw_data + allocator->pre_data_size);\
 }\
 \
@@ -169,5 +175,5 @@ void __##name##_shift_last_block(struct name##_allocator * alloc, size_t block_t
 		(sizeof(struct name##_block) * (alloc->metadata.used_size--)) + alloc->pre_data_size \
 	);\
 }\
-
+*/
 #endif /* allocator_h */
