@@ -7,6 +7,18 @@
 
 #include "include/block.h"
 
+
+struct block_metadata init_block_metadata(size_t item_size, size_t capacity) {
+	struct block_metadata _init_val = {
+		.used_size = 0,
+		.next = -1,
+		.previous = -1,
+		.capacity = capacity,
+		.item_size = item_size
+	};
+	return _init_val;
+}
+
 enum anyblock_insert_codes insert_into_block(void * block_data, struct block_metadata * meta, void * value) {
 	if (meta->capacity <= meta->used_size && meta->next == -1) {
 		return INSERT_NEW_BLOCK;

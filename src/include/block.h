@@ -36,20 +36,9 @@ struct block_metadata {
 struct name {\
 	struct block_metadata	metadata;\
 	type					data[max_size];\
-};\
-struct name init_block(void) {\
-	struct name _init_val = {\
-		{\
-			.used_size = 0,\
-			.next = -1,\
-			.previous = -1,\
-			.capacity = max_size,\
-			.item_size = sizeof(type)\
-		}\
-	};\
-	memset(_init_val.data, 0, sizeof(_init_val.data));\
-	return _init_val;\
-}\
+};
+
+struct block_metadata init_block_metadata(size_t item_size, size_t capacity);
 
 enum anyblock_insert_codes insert_into_block(void * block_data, struct block_metadata * meta, void * value);
 
