@@ -8,7 +8,7 @@
 #ifndef block_h
 #define block_h
 
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
 
