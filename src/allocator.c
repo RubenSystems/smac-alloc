@@ -6,9 +6,10 @@
 //
 
 #include "include/allocator.h"
+#include "include/palloc.h"
 
+#include <sys/mman.h>
 
-#include "palloc.h"
 
 
 static size_t __single_block_size(size_t block_data_size, size_t block_data_count) {
@@ -43,16 +44,15 @@ static struct block_metadata * __block_md(struct smac_allocator * alloc, size_t 
 }
 
 static void * __block_data(struct smac_allocator * alloc, size_t index) {
-	//	printf("%li\n", (intptr_t)(__block_md(alloc, index)));
-	//	printf("%li %i\n", (intptr_t)(__block_md(alloc, index) + sizeof(struct block_metadata)), sizeof(struct block_metadata));
-	//	printf("%li\n", (intptr_t)(void *)(__block_md(alloc, index) + sizeof(struct block_metadata)));
 	return ((void *)__block_md(alloc, index)) + sizeof(struct block_metadata);
 }
 
 
-struct smac_allocator init_allocator(const char * filename, void * pre_data, size_t pre_data_size, size_t block_data_size, size_t block_data_count) {
-	
-	int fd = _open_file(filename);
+void * smac_pre_data(struct smac_allocator * alloc) {
+	return __predata(alloc->mdata.raw_data);
+}
+
+struct smac_allocator init_allocator(int fd, void * pre_data, size_t pre_data_size, size_t block_data_size, size_t block_data_count) {
 	
 	size_t file_size;
 	if ((file_size = _file_size(fd)) == 0) {
@@ -148,8 +148,8 @@ size_t smac_get(struct smac_allocator * alloc, size_t block_no, size_t move_size
 		block_data,
 		alloc->mdata.block_data_size * min(move_size, meta->used_size)
 	);
-	move_size -= min(move_size, meta->used_size);
 	buffer_offset += min(move_size, meta->used_size);
+	move_size -= min(move_size, meta->used_size);
 	if (move_size <= 0 || meta->next == -1) {
 		return buffer_offset;
 	} else {
@@ -199,4 +199,9 @@ void smac_delete(struct smac_allocator * alloc, size_t block_no, void * value, b
 	if (meta->next != -1) {
 		smac_delete(alloc, meta->next, value, equal);
 	}
+}
+
+void smac_free(struct smac_allocator * alloc) {
+	struct persisted_allocator_metadata * pdata = __predata(alloc->mdata.raw_data);
+	munmap(alloc->mdata.raw_data, __single_block_size_alloc(alloc) * pdata->capacity);
 }

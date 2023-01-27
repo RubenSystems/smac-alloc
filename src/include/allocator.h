@@ -40,7 +40,10 @@ struct smac_allocator {
 };
 
 
-struct smac_allocator init_allocator(const char * filename, void * pre_data, size_t pre_data_size, size_t block_data_size, size_t block_data_count);
+
+struct smac_allocator init_allocator(int fd, void * pre_data, size_t pre_data_size, size_t block_data_size, size_t block_data_count);
+
+void * smac_pre_data(struct smac_allocator *);
 
 // If you deallocate (negative number_of_blocks) the result means very little.
 size_t smac_allocate(struct smac_allocator * alloc, size_t number_of_blocks);
@@ -50,5 +53,7 @@ void smac_add(struct smac_allocator * alloc, size_t block_no, void * data);
 size_t smac_get(struct smac_allocator * alloc, size_t block_no, size_t move_size, size_t buffer_offset, void * buffer);
 
 void smac_delete(struct smac_allocator * alloc, size_t block_no, void * value, bool (* equatable)(void *, void *)) ;
+
+void smac_free(struct smac_allocator * alloc);
 
 #endif /* allocator_h */
