@@ -108,7 +108,6 @@ size_t smac_allocate(struct smac_allocator * alloc, size_t number_of_blocks) {
 	}
 	size_t first_block_index = pdata->used_size;
 	pdata->used_size += number_of_blocks;
-	
 	return first_block_index;
 }
 
@@ -142,7 +141,6 @@ void smac_add(struct smac_allocator * alloc, size_t block_no, void * data) {
 size_t smac_get(struct smac_allocator * alloc, size_t block_no, size_t move_size, size_t buffer_offset, void * buffer) {
 	void * block_data = __block_data(alloc, block_no);
 	struct block_metadata * meta = __block_md(alloc, block_no);
-	
 	memmove(
 		buffer + (alloc->mdata.block_data_size * buffer_offset),
 		block_data,
